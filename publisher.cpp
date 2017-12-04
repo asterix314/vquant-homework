@@ -5,7 +5,6 @@
 #include "buffer.hpp"
 
 using namespace boost::interprocess;
-using namespace std::chrono_literals;
 
 int main(int argc, char *argv[]) {
 
@@ -21,10 +20,11 @@ int main(int argc, char *argv[]) {
               << "' at " << buf << std::endl;
 
   // publish data
+  std::chrono::milliseconds ms(1);
   std::cout << "[P" << id << "] publishing data ..." << std::endl;
   for(int i = 0; i < NUM_MESSAGES; ++i) {
     buf->push(i + (id - 1) * NUM_MESSAGES);
-    std::this_thread::sleep_for(1ms);  // 1000 messages per second
+    std::this_thread::sleep_for(ms);  // 1000 messages per second
   }
 
   std::cout << "[P" << id << "] exit." << std::endl;

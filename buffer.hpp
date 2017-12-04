@@ -2,7 +2,7 @@
 #include <chrono>
 
 #define MESSAGE_SIZE 256        // message size in bytes.
-#define NUM_MESSAGES 2000       // #messages to send per publisher
+#define NUM_MESSAGES 1000       // #messages to send per publisher
 #define NUM_PUBLISHERS 2        // #publishers
 #define NUM_SUBSCRIBERS 1       // #subscribers
 #define BUFFER_LENGTH 16        // #messages to hold in buffer
