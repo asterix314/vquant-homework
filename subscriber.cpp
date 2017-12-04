@@ -19,6 +19,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include "buffer.hpp"
 
 using namespace boost::interprocess;
@@ -49,27 +50,32 @@ int main(int argc, char *argv[]) {
     std::cout << "[S" << id << "] opened shared buffer '" << shm.get_name()
               << "' at " << buf << std::endl;
   }
-
-  // check received results
-  std::array<check_record, NUM_MESSAGES * NUM_PUBLISHERS> checks;
   
+  // receive messages and put them into an array
+  std::cout << "[S" << id << "] receiving messages ..." << std::endl;
+  std::array<check_record, NUM_MESSAGES * NUM_PUBLISHERS> checks;
+  for(auto &chk: checks) {
+    chk = buf->pop();
+  }
+
   // accumulator for statistics: min, max, mean, variance, etc.
   accumulator_set<
     double,
     stats<tag::min, tag::max, tag::mean, tag::variance>
     > acc_stats;
-
+  // save delays data to text file
+  std::ofstream ostrm("delays.txt");  
   for(auto &chk: checks) {
-    chk = buf->pop();
     acc_stats(chk.elapsed_us);
+    ostrm << chk.elapsed_us << std::endl;
   }
 
+  // now to check whether we received every message
   // sort the checks array by .data.
   std::sort(checks.begin(), checks.end(),
             [](check_record &a, check_record &b) {
               return a.data < b.data;
             });
-
   bool rcvd_ok = true;
   for(int i=0; i<NUM_MESSAGES * NUM_PUBLISHERS; ++i) {
      rcvd_ok = rcvd_ok && (i == checks[i].data);
@@ -82,7 +88,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << "[S" << id << "] statistics of delays in micro seconds:" << std::endl;
-  std::cout << "min = " << min(acc_stats) << " max = " << max(acc_stats)
+  std::cout << "[S" << id << "] min = " << min(acc_stats) << " max = " << max(acc_stats)
             << " mean = " << mean(acc_stats) << " std = " << std::sqrt(variance(acc_stats))
             << std::endl;
 
