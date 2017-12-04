@@ -1,3 +1,12 @@
+/***********************
+   publisher.cpp 
+   publisher logic
+   for homework project
+
+   zhang chen hui
+   asterix314@163.com
+***********************/
+
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <thread>

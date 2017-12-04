@@ -1,3 +1,12 @@
+/***********************
+   buffer.hpp 
+   messages and buffer operations, macro constants.
+   for homework project
+
+   zhang chen hui
+   asterix314@163.com
+***********************/
+
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <chrono>
 
