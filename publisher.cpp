@@ -2,49 +2,31 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <thread>
 #include <iostream>
-#include "homework.hpp"
+#include "buffer.hpp"
 
 using namespace boost::interprocess;
 using namespace std::chrono_literals;
 
 int main(int argc, char *argv[]) {
 
-  int publisher_id = std::stoi(argv[1]); // 1 or 2
-  std::cout << "[p" << publisher_id << "] starts." << std::endl;
-
-  // to remove shared memory on destruction
-  struct shm_remove  {
-    ~shm_remove(){
-      shared_memory_object::remove("homework");
-    }
-  } shm_remover;
+  int id = std::stoi(argv[1]); // 1 or 2
+  std::cout << "[P" << id << "] starts." << std::endl;
   
-  // set up shared memory to hold the shm_buffer
-  // 1st publisher constructs the buffer structure for all to use
-  shared_memory_object shm (open_or_create, "homework" , read_write);
-
-  if (1 == publisher_id) {
-    shm.truncate(sizeof(shm_buffer));
-  }
-
-  mapped_region region(shm, read_write);
-
-  shm_buffer *buffer = 0;
-  if (1 == publisher_id) {
-    buffer = new (region.get_address()) shm_buffer;
-    std::cout << "[p" << publisher_id << "] created shared buffer." << std::endl;
-  } else {
-    buffer = static_cast<shm_buffer*>(region.get_address());
-    std::cout << "[p" << publisher_id << "] opened shared buffer." << std::endl;
-  }
+  // subscriber 1 should have set up the "homework" shared buffer already.
+  // map it to own address space.
+  shared_memory_object shm (open_only, "homework", read_write);
+  mapped_region mreg(shm, read_write);
+  shm_buffer * buf = static_cast<shm_buffer*>(mreg.get_address());
+  std::cout << "[P" << id << "] opened shared buffer '" << shm.get_name()
+              << "' at " << buf << std::endl;
 
   // publish data
-  std::cout << "[p" << publisher_id << "] publishing data ..." << std::endl;
+  std::cout << "[P" << id << "] publishing data ..." << std::endl;
   for(int i = 0; i < NUM_MESSAGES; ++i) {
-    buffer->push(i + (publisher_id - 1) * NUM_MESSAGES);
+    buf->push(i + (id - 1) * NUM_MESSAGES);
     std::this_thread::sleep_for(1ms);  // 1000 messages per second
   }
 
-  std::cout << "[p" << publisher_id << "] remove shared buffer." << std::endl;
+  std::cout << "[P" << id << "] exit." << std::endl;
   return 0;
 }
