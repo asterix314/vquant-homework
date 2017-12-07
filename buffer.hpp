@@ -5,33 +5,52 @@
 
    zhang chen hui
    asterix314@163.com
+
+
+pop: busy-spin
+	repeat 2n:
+		while (msg[ri].status != written);
+		read from msg[ri];
+		msg[ri].status = read;
+		ri++;
+
+push:
+	repeat n:
+		lock(mutex)
+		while (msg[wi].status != read);
+		write to msg[wi];
+		msg[wi].status = written;
+		wi++;
+		unlock(mutex);
+		sleep(1ms);
+
 ***********************/
 
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <chrono>
 
-#define MESSAGE_SIZE 256        // message size in bytes.
-#define NUM_MESSAGES 1000       // #messages to send per publisher
-#define NUM_PUBLISHERS 2        // #publishers
-#define NUM_SUBSCRIBERS 1       // #subscribers
-#define BUFFER_LENGTH 16        // #messages to hold in buffer
+constexpr int message_size = 256;        // message size in bytes.
+constexpr int num_messages = 1000;       // #messages to send per publisher
+constexpr int num_publishers = 2;        // #publishers
+constexpr int num_subscribers = 1;       // #subscribers
+constexpr int buffer_length = 16;        // #messages to hold in buffer
 
 using namespace std::chrono;
 
 struct message {
   high_resolution_clock::time_point timestamp;
-  int data[MESSAGE_SIZE / sizeof(int)];
+  int data[(message_size - sizeof(timestamp)) / sizeof(int)];
 };
 
 struct check_record {   // for statistics
-  double elapsed_us;    // microseconds elapsed
+  double elapsed_ns;    // nanoseconds elapsed
   int data;
 };
 
 struct shm_buffer {     // shared memory buffer 
-  message messages[BUFFER_LENGTH];
-  int write_index = 0;
-  int read_index = 0;
+  message msg[buffer_length];
+  int wi = 0;    // wirte index
+  int ri = 0;    // read index
 
   boost::interprocess::interprocess_semaphore
     m_mutex,  // buffer mutex
@@ -40,7 +59,7 @@ struct shm_buffer {     // shared memory buffer
 
   shm_buffer():
     m_mutex(1),
-    m_empty(BUFFER_LENGTH),
+    m_empty(buffer_length),
     m_full(0)
   {}
 
@@ -48,10 +67,10 @@ struct shm_buffer {     // shared memory buffer
     m_empty.wait();
     m_mutex.wait();
     
-    messages[write_index] = {
+    msg[wi] = {
       high_resolution_clock::now(), {x}
     };
-    write_index = (++write_index) % BUFFER_LENGTH;
+    wi = (++wi) % buffer_length;
 
     m_mutex.post();
     m_full.post();
@@ -61,13 +80,13 @@ struct shm_buffer {     // shared memory buffer
     m_full.wait();
     m_mutex.wait();
 
-    std::chrono::duration<double, std::micro> elapsed = 
-      high_resolution_clock::now() - messages[read_index].timestamp;
+    std::chrono::duration<double, std::nano> elapsed = 
+      high_resolution_clock::now() - msg[ri].timestamp;
     check_record check = {
       elapsed.count(),
-      messages[read_index].data[0]
+      msg[ri].data[0]
     };
-    read_index = (++read_index) % BUFFER_LENGTH;
+    ri = (++ri) % buffer_length;
 
     m_mutex.post();
     m_empty.post();

@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   
   // receive messages and put them into an array
   std::cout << "[S" << id << "] receiving messages ..." << std::endl;
-  std::array<check_record, NUM_MESSAGES * NUM_PUBLISHERS> checks;
+  std::array<check_record, num_messages * num_publishers> checks;
   for(auto &chk: checks) {
     chk = buf->pop();
   }
@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
   // save delays data to text file
   std::ofstream ostrm("delays.txt");  
   for(auto &chk: checks) {
-    acc_stats(chk.elapsed_us);
-    ostrm << chk.elapsed_us << std::endl;
+    acc_stats(chk.elapsed_ns);
+    ostrm << chk.elapsed_ns << std::endl;
   }
 
   // now to check whether we received every message
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
               return a.data < b.data;
             });
   bool rcvd_ok = true;
-  for(int i=0; i<NUM_MESSAGES * NUM_PUBLISHERS; ++i) {
+  for(int i=0; i < num_messages * num_publishers; ++i) {
      rcvd_ok = rcvd_ok && (i == checks[i].data);
   }
   
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     std::cout << "[S" << id << "] ERROR found in received messages." << std::endl;
   }
 
-  std::cout << "[S" << id << "] statistics of delays in micro seconds:" << std::endl;
+  std::cout << "[S" << id << "] statistics of delays in nano seconds:" << std::endl;
   std::cout << "[S" << id << "] min = " << min(acc_stats) << " max = " << max(acc_stats)
             << " mean = " << mean(acc_stats) << " std = " << std::sqrt(variance(acc_stats))
             << std::endl;

@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
 
   // publish data
   std::chrono::milliseconds ms(1);
-  std::cout << "[P" << id << "] sending " << NUM_MESSAGES << " messages ..." << std::endl;
-  for(int i = 0; i < NUM_MESSAGES; ++i) {
-    buf->push(i + (id - 1) * NUM_MESSAGES);
+  std::cout << "[P" << id << "] sending " << num_messages << " messages ..." << std::endl;
+  for(int i = 0; i < num_messages; ++i) {
+    buf->push(i + (id - 1) * num_messages);
     std::this_thread::sleep_for(ms);  // 1000 messages per second
   }
 
