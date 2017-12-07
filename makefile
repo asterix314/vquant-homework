@@ -1,7 +1,12 @@
+CXX=clang++
+CFLAGS=-std=c++11
+DEPS=buffer.hpp
+LIBS=-lrt -lpthread
+
 all: publisher subscriber
 
-publisher: publisher.cpp buffer.hpp
-	clang++ -std=c++11 -lpthread -lrt publisher.cpp -o publisher
+%: %.cpp $(DEPS)
+	$(CXX) -o $@ $< $(CFLAGS) $(LIBS)
 
-subscriber: subscriber.cpp buffer.hpp
-	clang++ -std=c++11 -lpthread -lrt subscriber.cpp -o subscriber
+clean:
+	rm -f publisher subscriber delay*.txt

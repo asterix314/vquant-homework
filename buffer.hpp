@@ -14,6 +14,7 @@ pop: busy-spin
 		msg[ri].status = read;
 		ri++;
 
+
 push:
 	repeat n:
 		lock(mutex)
