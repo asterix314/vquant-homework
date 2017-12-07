@@ -6,6 +6,12 @@
    zhang chen hui
    asterix314@163.com
 
+1. 把微秒计时改为纳秒计时；
+2. 测试时使用pthread_setaffinity_np或者taskset将publisher和subscriber锁到不同核上；
+3. 避免publisher和subscriber上的线程切换。我这里提供两个提示：1） publisher和subscriber在常态下应该是在busy spin; 2）. 使用无锁的方式
+
+use sched_setaffinity for processes.
+better: taskset or cpuset
 
 pop: busy-spin
 	repeat 2n:
