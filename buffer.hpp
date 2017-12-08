@@ -37,7 +37,7 @@ push:
 #include <chrono>
 
 constexpr int message_size = 256;        // message size in bytes.
-constexpr int num_messages = 1000;       // #messages to send per publisher
+constexpr int num_messages = 5000;       // #messages to send per publisher
 constexpr int num_publishers = 2;        // #publishers
 constexpr int num_subscribers = 1;       // #subscribers
 constexpr int buffer_length = 16;        // #messages to hold in buffer
@@ -47,11 +47,6 @@ using namespace std::chrono;
 struct message {
   high_resolution_clock::time_point timestamp;
   int data[(message_size - sizeof(timestamp)) / sizeof(int)];
-};
-
-struct check_record {   // for statistics
-  double elapsed_ns;    // nanoseconds elapsed
-  int data;
 };
 
 struct shm_buffer {     // shared memory buffer 
@@ -83,22 +78,17 @@ struct shm_buffer {     // shared memory buffer
     m_full.post();
   }
 
-  check_record pop() {
+  message pop() {
     m_full.wait();
     m_mutex.wait();
-
-    std::chrono::duration<double, std::nano> elapsed = 
-      high_resolution_clock::now() - msg[ri].timestamp;
-    check_record check = {
-      elapsed.count(),
-      msg[ri].data[0]
-    };
+ 
+    message m = msg[ri];
     ri = (++ri) % buffer_length;
 
     m_mutex.post();
     m_empty.post();
 
-    return check;
+    return m;
   }
 
 };
