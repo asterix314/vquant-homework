@@ -5,33 +5,13 @@
 
    zhang chen hui
    asterix314@163.com
-
-
-pop: busy-spin
-	repeat 2n:
-		while (msg[ri].status != written);
-		read from msg[ri];
-		msg[ri].status = read;
-		ri++;
-
-
-push:
-	repeat n:
-		lock(mutex)
-		while (msg[wi].status != read);
-		write to msg[wi];
-		msg[wi].status = written;
-		wi++;
-		unlock(mutex);
-		sleep(1ms);
-
 ***********************/
 
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <chrono>
 
 constexpr int message_size = 256;        // message size in bytes.
-constexpr int num_messages = 5000;       // #messages to send per publisher
+constexpr int num_messages = 2000;       // #messages to send per publisher
 constexpr int num_publishers = 2;        // #publishers
 constexpr int num_subscribers = 1;       // #subscribers
 constexpr int buffer_length = 16;        // #messages to hold in buffer
