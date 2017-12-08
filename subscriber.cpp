@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   std::array<record, num_messages * num_publishers> checks;
   for(auto &chk: checks) {
-    message m = buf->pop();
+    message m = buf->read();
     duration<double, std::nano> elapsed = high_resolution_clock::now() - m.timestamp;
     chk = { elapsed.count(), m.data[0] };
   }
