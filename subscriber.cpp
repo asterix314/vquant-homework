@@ -24,6 +24,7 @@
 
 using namespace boost::interprocess;
 using namespace boost::accumulators;
+using namespace std::chrono;
 
 int main(int argc, char *argv[]) {
 
@@ -53,9 +54,17 @@ int main(int argc, char *argv[]) {
   
   // receive messages and put them into an array
   std::cout << "[S" << id << "] receiving messages ..." << std::endl;
-  std::array<check_record, num_messages * num_publishers> checks;
+
+  struct record {         // for statistics
+    double elapsed_ns;    // nanoseconds elapsed
+    int data;
+  };
+
+  std::array<record, num_messages * num_publishers> checks;
   for(auto &chk: checks) {
-    chk = buf->pop();
+    message m = buf->pop();
+    duration<double, std::nano> elapsed = high_resolution_clock::now() - m.timestamp;
+    chk = { elapsed.count(), m.data[0] };
   }
 
   // accumulator for statistics: min, max, mean, variance, etc.
@@ -63,25 +72,28 @@ int main(int argc, char *argv[]) {
     double,
     stats<tag::min, tag::max, tag::mean, tag::variance>
     > acc_stats;
+
   // save delays data to text file
   std::ofstream ostrm("delays.txt");  
+
   for(auto &chk: checks) {
     acc_stats(chk.elapsed_ns);
     ostrm << chk.elapsed_ns << std::endl;
   }
 
   // now to check whether we received every message
-  // sort the checks array by .data.
+  // sort the checks array by .data, and it must be increasing.
   std::sort(checks.begin(), checks.end(),
-            [](check_record &a, check_record &b) {
+            [](const record &a, const record &b) {
               return a.data < b.data;
             });
-  bool rcvd_ok = true;
+
+  bool data_ok = true;
   for(int i=0; i < num_messages * num_publishers; ++i) {
-     rcvd_ok = rcvd_ok && (i == checks[i].data);
+    data_ok = data_ok && (i == checks[i].data);
   }
   
-  if (rcvd_ok) {
+  if (data_ok) {
     std::cout << "[S" << id << "] check received messages: ok." << std::endl;
   } else {
     std::cout << "[S" << id << "] ERROR found in received messages." << std::endl;

@@ -43,11 +43,6 @@ struct message {
   int data[(message_size - sizeof(timestamp)) / sizeof(int)];
 };
 
-struct check_record {   // for statistics
-  double elapsed_ns;    // nanoseconds elapsed
-  int data;
-};
-
 struct shm_buffer {     // shared memory buffer 
   message msg[buffer_length];
   int wi = 0;    // wirte index
@@ -77,22 +72,17 @@ struct shm_buffer {     // shared memory buffer
     m_full.post();
   }
 
-  check_record pop() {
+  message pop() {
     m_full.wait();
     m_mutex.wait();
-
-    std::chrono::duration<double, std::nano> elapsed = 
-      high_resolution_clock::now() - msg[ri].timestamp;
-    check_record check = {
-      elapsed.count(),
-      msg[ri].data[0]
-    };
+ 
+    message m = msg[ri];
     ri = (++ri) % buffer_length;
 
     m_mutex.post();
     m_empty.post();
 
-    return check;
+    return m;
   }
 
 };
