@@ -31,7 +31,7 @@ push:
 #include <chrono>
 
 constexpr int message_size = 256;        // message size in bytes.
-constexpr int num_messages = 1000;       // #messages to send per publisher
+constexpr int num_messages = 5000;       // #messages to send per publisher
 constexpr int num_publishers = 2;        // #publishers
 constexpr int num_subscribers = 1;       // #subscribers
 constexpr int buffer_length = 16;        // #messages to hold in buffer
