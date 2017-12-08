@@ -1,5 +1,5 @@
-CXX=clang++
-CFLAGS=-std=c++11
+CXX=g++
+CFLAGS=-std=c++11 
 DEPS=buffer.hpp
 LIBS=-lrt -lpthread
 
