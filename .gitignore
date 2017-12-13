@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# output directory
+/out/
+
+# doc pdfs
+/doc/**/*.pdf
